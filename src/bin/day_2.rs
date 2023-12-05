@@ -9,8 +9,11 @@ use std::{
 use regex::{Regex, RegexSet};
 
 fn main() {
-    part_1();
-    // part_2();
+    println!("Part 1: Sum of IDs of valid games: {}", sum_id_of_valid_games());
+    println!(
+        "Part 2: Sum of power of all games: {}",
+        get_total_power_for_input("inputs/day_2.txt")
+    );
 }
 
 struct Game {
@@ -88,9 +91,55 @@ fn parse_game_with_chars(line: &str) -> Game {
     }
 }
 
-fn part_1() {
-    let file = File::open("inputs/day_2.txt").unwrap();
+impl Game {
+    fn get_minimum_contents(&self) -> GameRound {
+        let mut min_contents = self.rounds.iter().fold(
+            GameRound {
+                blue: 0,
+                red: 0,
+                green: 0,
+            },
+            |mut acc, round| {
+                acc.red = acc.red.max(round.red);
+                acc.blue = acc.blue.max(round.blue);
+                acc.green = acc.green.max(round.green);
+                acc
+            },
+        );
+
+        min_contents
+    }
+
+    fn get_power(&self) -> u64 {
+        let contents = self.get_minimum_contents();
+        let power = contents.red * contents.blue * contents.green;
+        power
+    }
+}
+
+fn parse_games(filename: &str) -> Vec<Game> {
+    let file = File::open(filename).unwrap();
     let reader = BufReader::new(file);
+    let mut games = Vec::new();
+
+    for line in reader.lines() {
+        let line = dbg!(line.expect("Whoops"));
+
+        let game = parse_game_with_chars(&line);
+        games.push(game);
+    }
+    games
+}
+
+fn get_total_power_for_input(filename: &str) -> u64 {
+    parse_games(filename)
+        .iter()
+        .map(|game| game.get_power())
+        .fold(0, |mut acc, power| acc + power)
+}
+
+fn sum_id_of_valid_games() -> u64 {
+    let games = parse_games("inputs/day_2.txt");
 
     const MAX_RED: u64 = 12;
     const MAX_GREEN: u64 = 13;
@@ -98,14 +147,12 @@ fn part_1() {
 
     let mut result: u64 = 0;
 
-    for line in reader.lines() {
-        let line = dbg!(line.expect("Whoops"));
-
+    for game in games {
         let Game {
             id,
             rounds,
             // } = _parse_game_with_regex(&line);
-        } = parse_game_with_chars(&line);
+        } = game;
 
         if dbg!(rounds)
             .iter()
@@ -115,5 +162,5 @@ fn part_1() {
             result += id;
         }
     }
-    println!("Sum of IDs of valid games: {}", &result);
+    result
 }
