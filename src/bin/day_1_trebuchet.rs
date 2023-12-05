@@ -1,6 +1,9 @@
 use std::{
+    arch::x86_64::__cpuid,
     fs::File,
     io::{BufRead, BufReader},
+    iter::Peekable,
+    str::Chars,
 };
 
 use regex::{Regex, RegexSet};
@@ -36,47 +39,63 @@ fn part_1() {
 
 fn part_2() {
     fn get_calibration_value(value: &str) -> u64 {
-        // let regex = Regex::new("^(?<first>[0-9]|(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)).*(?<second>[0-9]|(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)|(zero))?")hhhhhhhhhh
-        // let regex =
-        //     Regex::new("[0-9]|(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)")
-        //         .unwrap();
-        let regex = RegexSet::new(vec![
-            "[0-9]",
-            "one",
-            "two",
-            "three",
-            "four",
-            "five",
-            "six",
-            "seven",
-            "eight",
-            "nine",
-        ])
-        .unwrap();
-        // Regex::new("[0-9]|(one)|(two)|(three)|(four)|(five)|(six)|(seven)|(eight)|(nine)").unwrap();
-        let mut matches = regex.find_iter(value).map(|digit| match digit.as_str() {
-            "one" | "1" => '1',
-            "two" | "2" => '2',
-            "three" | "3" => '3',
-            "four" | "4" => '4',
-            "five" | "5" => '5',
-            "six" | "6" => '6',
-            "seven" | "7" => '7',
-            "eight" | "8" => '8',
-            "nine" | "9" => '9',
-            "zero" | "0" => '0',
-            _ => panic!("Expected match, didn't fine one"),
-        });
+        // First get an iter of the chars, to go through. We can do this with one pass.
+        let chars = value.chars();
 
-        let first = matches.next().unwrap();
-        let second = matches.last().unwrap_or(first);
+        let digits = vec![
+            ("0", 0),
+            ("1", 1),
+            ("2", 2),
+            ("3", 3),
+            ("4", 4),
+            ("5", 5),
+            ("6", 6),
+            ("7", 7),
+            ("8", 8),
+            ("9", 9),
+            ("one", 1),
+            ("two", 2),
+            ("three", 3),
+            ("four", 4),
+            ("five", 5),
+            ("six", 6),
+            ("seven", 7),
+            ("eight", 8),
+            ("nine", 9),
+        ];
 
-        let mut value_str = String::new();
-        value_str.push(first);
-        value_str.push(second);
-        println!("{}: {}", &value, &value_str);
+        let mut partials: Vec<(Peekable<Chars>, u8)> = Vec::new();
+        let mut matched_digits = Vec::new();
 
-        return value_str.parse().unwrap();
+        for char in chars {
+            partials.append(
+                &mut digits
+                    .iter()
+                    .map(|(needle, digit)| (needle.chars().peekable(), *digit))
+                    .collect(),
+            );
+
+            let mut to_remove = Vec::new();
+            for (i, partial) in partials.iter_mut().enumerate() {
+                if partial.0.next().map_or(false, |c| c.eq(&char)) {
+                    if partial.0.peek().is_none() {
+                        matched_digits.push(partial.1);
+                        to_remove.push(i);
+                    }
+                } else {
+                    to_remove.push(i);
+                }
+            }
+            for i in to_remove.iter().rev() {
+                let _ = partials.swap_remove(*i);
+            }
+        }
+
+        let value_str =
+            *matched_digits.first().unwrap() as u64 * 10 + *matched_digits.last().unwrap() as u64;
+
+        println!("DEBUG: {} : {:?} : {}", value, &matched_digits, &value_str);
+        value_str
     }
 
     let mut calibration_values_sum: u64 = 0;
