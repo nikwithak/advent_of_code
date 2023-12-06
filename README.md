@@ -12,6 +12,9 @@ Solutions haven't been optimized for performance once the right answer has been
 reached.
 
 Each solution contains tests for the sample input, as well as the final answers.
+Run `cargo test` to run all tests. To run a specific day `n`, use
+`cargo run --bin day_n`. To use a custom input, either replace the file in the
+`inputs` directory, or modify the code to read in a different file.
 
 For any questions about my solutions, approach, or if you discover an
 undocumented bug, feel free to
