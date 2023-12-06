@@ -21,13 +21,13 @@ mod tests {
     #[test]
     fn part_2_final_input() {
         let result = part_2("inputs/day_1.txt");
-        assert_eq!(result, 281);
+        assert_eq!(result, 56324);
     }
 
     #[test]
     fn part_2_sample_input() {
         let result = part_2("inputs/day_1_sample__part_2.txt");
-        assert_eq!(result, 56324);
+        assert_eq!(result, 281);
     }
 }
 
