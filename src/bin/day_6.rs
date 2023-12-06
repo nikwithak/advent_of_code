@@ -85,6 +85,7 @@ fn parse_input_ignore_whitespace(filename: &str) -> Race {
         distance,
     }
 }
+
 fn parse_input(filename: &str) -> Vec<Race> {
     let input_str = std::fs::read_to_string(filename).unwrap();
     let values: Vec<Vec<u64>> = input_str
