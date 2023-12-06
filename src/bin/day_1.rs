@@ -1,12 +1,10 @@
 use std::{
-    arch::x86_64::__cpuid,
     fs::File,
     io::{BufRead, BufReader},
     iter::Peekable,
     str::Chars,
 };
 
-use regex::{Regex, RegexSet};
 #[cfg(test)]
 mod tests {
     use super::*;

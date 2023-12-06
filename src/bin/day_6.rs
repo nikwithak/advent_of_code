@@ -14,7 +14,7 @@ mod tests {
     fn part_2_sample_input() {
         let race = parse_input_ignore_whitespace("inputs/day_6_sample.txt");
         let (min, max) = dbg!(race.get_button_times());
-        let val = (max - min + 1);
+        let val = max - min + 1;
         assert_eq!(val, 71503);
     }
     #[test]
@@ -30,7 +30,7 @@ mod tests {
     fn part_2_final_input() {
         let race = parse_input_ignore_whitespace("inputs/day_6.txt");
         let (min, max) = dbg!(race.get_button_times());
-        let val = (max - min + 1);
+        let val = max - min + 1;
         assert_eq!(val, 32607562);
     }
 }
@@ -118,6 +118,6 @@ fn main() {
 
     let race = parse_input_ignore_whitespace("inputs/day_6.txt");
     let (min, max) = dbg!(race.get_button_times());
-    let val = (max - min + 1);
+    let val = max - min + 1;
     println!("Part 2: {}", val);
 }

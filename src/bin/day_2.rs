@@ -1,12 +1,9 @@
 use std::{
-    arch::x86_64::__cpuid,
     fs::File,
     io::{BufRead, BufReader},
-    iter::Peekable,
-    str::Chars,
 };
 
-use regex::{Regex, RegexSet};
+use regex::Regex;
 
 #[cfg(test)]
 mod tests {
@@ -114,7 +111,7 @@ fn parse_game_with_chars(line: &str) -> Game {
 
 impl Game {
     fn get_minimum_contents(&self) -> GameRound {
-        let mut min_contents = self.rounds.iter().fold(
+        let min_contents = self.rounds.iter().fold(
             GameRound {
                 blue: 0,
                 red: 0,
@@ -156,7 +153,7 @@ fn get_total_power_for_input(filename: &str) -> u64 {
     parse_games(filename)
         .iter()
         .map(|game| game.get_power())
-        .fold(0, |mut acc, power| acc + power)
+        .fold(0, |acc, power| acc + power)
 }
 
 fn sum_id_of_valid_games(filename: &str) -> u64 {

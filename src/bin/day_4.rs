@@ -1,8 +1,6 @@
 use std::{
-    collections::HashMap,
     fs::File,
     io::{BufRead, BufReader},
-    ops::{Add, AddAssign},
     sync::Mutex,
 };
 
@@ -40,7 +38,7 @@ mod tests {
     }
 }
 
-fn count_total_scratchcards(mut cards: &Vec<Card>) -> u64 {
+fn count_total_scratchcards(cards: &Vec<Card>) -> u64 {
     let cards: Vec<(&Card, Mutex<u64>)> = cards.iter().map(|card| (card, Mutex::new(1))).collect(); // Count of each card
     for (card, count) in &cards {
         let matches = card.count_matches();

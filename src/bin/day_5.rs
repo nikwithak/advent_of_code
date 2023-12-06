@@ -2,7 +2,6 @@ use std::{
     collections::{BTreeSet, HashMap},
     fs::File,
     io::{BufRead, BufReader},
-    thread::current,
 };
 
 #[cfg(test)]
@@ -48,12 +47,6 @@ fn main() {
 }
 
 type Seed = u64;
-type Soil = u64;
-type Fertilizer = u64;
-type Water = u64;
-type Light = u64;
-type Temperature = u64;
-type Humidity = u64;
 type Location = u64;
 
 #[derive(Default, Debug)]
