@@ -17,6 +17,22 @@ mod tests {
         let val = (max - min + 1);
         assert_eq!(val, 71503);
     }
+    #[test]
+    fn part_1_final_input() {
+        let races = parse_input("inputs/day_6.txt");
+        let val = races.iter().fold(1, |acc, race| {
+            let (min, max) = dbg!(race.get_button_times());
+            (max - min + 1) * acc
+        });
+        assert_eq!(val, 503424);
+    }
+    #[test]
+    fn part_2_final_input() {
+        let race = parse_input_ignore_whitespace("inputs/day_6.txt");
+        let (min, max) = dbg!(race.get_button_times());
+        let val = (max - min + 1);
+        assert_eq!(val, 32607562);
+    }
 }
 
 struct Race {

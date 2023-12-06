@@ -6,14 +6,40 @@ use std::{
 
 use regex::Regex;
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn part_1_sample() {
+        assert_eq!(sum_of_part_numbers("inputs/day_3_sample.txt"), 4361);
+    }
+    #[test]
+    fn part_1_final() {
+        assert_eq!(sum_of_part_numbers("inputs/day_3.txt"), 532428);
+    }
+    #[test]
+    fn part_2_sample() {
+        assert_eq!(calculate_sum_of_gear_ratios("inputs/day_3_sample.txt"), 467835);
+    }
+    #[test]
+    fn part_2_final() {
+        assert_eq!(calculate_sum_of_gear_ratios("inputs/day_3.txt"), 84051670);
+    }
+}
+
 fn main() {
     // Part 1
     // let input = parse_input("inputs/day_3_sample.txt");
-    let input = parse_input("inputs/day_3.txt");
-    let value = input.iter().fold(0, |acc, part| acc + dbg!(&part).id);
+    let value = sum_of_part_numbers("inputs/day_3.txt");
     println!("value: {}", &value);
 
     // Part 2: Gear Ratio
+    let result = calculate_sum_of_gear_ratios("inputs/day_3.txt");
+    println!("Gear Ratios: {}", &result)
+}
+
+fn calculate_sum_of_gear_ratios(filename: &str) -> u64 {
+    let input = parse_input(filename);
     let gears = input.iter().filter(|part| part.symbol.eq(&'*'));
     let gears = gears.fold(HashMap::<(u64, u64), Vec<u64>>::new(), |mut acc, gear| {
         match acc.get_mut(&gear.symbol_location) {
@@ -31,7 +57,13 @@ fn main() {
         .filter(|v| v.len() > 1)
         .map(|v| v.iter().fold(1, |acc, value| acc * value));
     let result = gear_ratios.fold(0, |acc, ratio| acc + ratio);
-    println!("Gear Ratios: {}", &result)
+    result
+}
+
+fn sum_of_part_numbers(filename: &str) -> u64 {
+    let input = parse_input(filename);
+    let value = input.iter().fold(0, |acc, part| acc + dbg!(&part).id);
+    value
 }
 
 #[derive(Debug)]

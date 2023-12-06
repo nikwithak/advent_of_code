@@ -12,17 +12,31 @@ use regex::Regex;
 mod tests {
     use super::*;
     #[test]
-    fn test_part_1_sample_input() {
+    fn part_1_sample_input() {
         let input = parse_input("inputs/day_4_sample.txt");
         let result = count_points(&input);
-        assert_eq!(13, result);
+        assert_eq!(result, 13);
     }
 
     #[test]
-    fn test_part_2_sample_input() {
+    fn part_2_sample_input() {
         let input = parse_input("inputs/day_4_sample.txt");
         let result = count_total_scratchcards(&input);
-        assert_eq!(30, result);
+        assert_eq!(result, 30);
+    }
+
+    #[test]
+    fn part_l_final_input() {
+        let input = parse_input("inputs/day_4.txt");
+        let result = count_points(&input);
+        assert_eq!(result, 21821);
+    }
+
+    #[test]
+    fn part_2_final_input() {
+        let input = parse_input("inputs/day_4.txt");
+        let result = count_total_scratchcards(&input);
+        assert_eq!(result, 5539496);
     }
 }
 

@@ -17,6 +17,13 @@ mod tests {
     }
 
     #[test]
+    fn part_1_real_input() {
+        let problem_def = load_file("inputs/day_5.txt");
+        let result = problem_def.get_lowest_location();
+        assert_eq!(result, 836040384);
+    }
+
+    #[test]
     fn part_2_sample_input() {
         let problem_def = dbg!(load_file("inputs/day_5_sample.txt"));
         let result = problem_def.get_lowest_location_as_pairs();

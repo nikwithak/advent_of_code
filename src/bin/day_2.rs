@@ -8,8 +8,29 @@ use std::{
 
 use regex::{Regex, RegexSet};
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn part_1_sample() {
+        assert_eq!(sum_id_of_valid_games("inputs/day_2_sample.txt"), 8)
+    }
+    #[test]
+    fn part_1_final() {
+        assert_eq!(sum_id_of_valid_games("inputs/day_2.txt"), 2720)
+    }
+    #[test]
+    fn part_2_sample() {
+        assert_eq!(get_total_power_for_input("inputs/day_2_sample.txt"), 2286)
+    }
+    #[test]
+    fn part_2_final() {
+        assert_eq!(get_total_power_for_input("inputs/day_2.txt"), 71535)
+    }
+}
+
 fn main() {
-    println!("Part 1: Sum of IDs of valid games: {}", sum_id_of_valid_games());
+    println!("Part 1: Sum of IDs of valid games: {}", sum_id_of_valid_games("inputs/day_2.txt"));
     println!(
         "Part 2: Sum of power of all games: {}",
         get_total_power_for_input("inputs/day_2.txt")
@@ -138,8 +159,8 @@ fn get_total_power_for_input(filename: &str) -> u64 {
         .fold(0, |mut acc, power| acc + power)
 }
 
-fn sum_id_of_valid_games() -> u64 {
-    let games = parse_games("inputs/day_2.txt");
+fn sum_id_of_valid_games(filename: &str) -> u64 {
+    let games = parse_games(filename);
 
     const MAX_RED: u64 = 12;
     const MAX_GREEN: u64 = 13;

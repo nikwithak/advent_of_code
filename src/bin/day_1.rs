@@ -7,13 +7,40 @@ use std::{
 };
 
 use regex::{Regex, RegexSet};
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn part_1_sample_input() {
+        let result = part_1("inputs/day_1_sample__part_1.txt");
+        assert_eq!(result, 142);
+    }
+    #[test]
+    fn part_1_final_input() {
+        let result = part_1("inputs/day_1.txt");
+        assert_eq!(result, 55108);
+    }
+    #[test]
+    fn part_2_final_input() {
+        let result = part_2("inputs/day_1.txt");
+        assert_eq!(result, 281);
+    }
 
-fn main() {
-    // part_1();
-    part_2();
+    #[test]
+    fn part_2_sample_input() {
+        let result = part_2("inputs/day_1_sample__part_2.txt");
+        assert_eq!(result, 56324);
+    }
 }
 
-fn part_1() {
+fn main() {
+    part_1("inputs/day_1_sample__part_1.txt");
+    part_1("inputs/day_1.txt");
+    part_2("inputs/day_1_sample__part_2.txt");
+    part_2("inputs/day_1.txt");
+}
+
+fn part_1(filename: &str) -> u64 {
     fn get_calibration_value(value: &str) -> u64 {
         let mut chars = value.chars();
         let first = chars.find(|c| c.is_digit(10)).expect("No first digit found");
@@ -27,7 +54,7 @@ fn part_1() {
     }
 
     let mut calibration_values_sum: u64 = 0;
-    let file = File::open("inputs/day_1_trebuchet.txt").unwrap();
+    let file = File::open(filename).unwrap();
     let reader = BufReader::new(file);
 
     for line in reader.lines() {
@@ -35,9 +62,10 @@ fn part_1() {
         calibration_values_sum += val;
     }
     println!("Sum of calibration values: {}", calibration_values_sum);
+    calibration_values_sum
 }
 
-fn part_2() {
+fn part_2(filename: &str) -> u64 {
     fn get_calibration_value(value: &str) -> u64 {
         // First get an iter of the chars, to go through. We can do this with one pass.
         let chars = value.chars();
@@ -94,13 +122,12 @@ fn part_2() {
         let value_str =
             *matched_digits.first().unwrap() as u64 * 10 + *matched_digits.last().unwrap() as u64;
 
-        println!("DEBUG: {} : {:?} : {}", value, &matched_digits, &value_str);
         value_str
     }
 
     let mut calibration_values_sum: u64 = 0;
 
-    let file = File::open("inputs/day_1_trebuchet.txt").unwrap();
+    let file = File::open(filename).unwrap();
     let reader = BufReader::new(file);
 
     for line in reader.lines() {
@@ -108,4 +135,5 @@ fn part_2() {
         calibration_values_sum += val;
     }
     println!("Sum of calibration values: {}", calibration_values_sum);
+    calibration_values_sum
 }
