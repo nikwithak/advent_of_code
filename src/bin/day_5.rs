@@ -10,10 +10,17 @@ mod tests {
     use crate::load_file;
 
     #[test]
-    fn test_sample_input() {
+    fn part_1_sample_input() {
         let problem_def = load_file("inputs/day_5_sample.txt");
         let result = problem_def.get_lowest_location();
         assert_eq!(result, 35);
+    }
+
+    #[test]
+    fn part_2_sample_input() {
+        let problem_def = load_file("inputs/day_5_sample.txt");
+        let result = problem_def.get_lowest_location_as_pairs();
+        assert_eq!(result, 46);
     }
 }
 fn main() {
@@ -59,11 +66,48 @@ impl ProblemDefinition {
         location as Location
     }
 
+    fn get_locations_for_seed_ranges(
+        &self,
+        seed_ranges: Vec<(u64, u64)>,
+    ) -> Location {
+        dbg!(&seed_ranges);
+        let soil = dbg!(self.seed_to_soil.get_destination_ranges(seed_ranges.iter().collect()));
+        let fertilizer =
+            dbg!(self.soil_to_fertilizer.get_destination_ranges(soil.iter().collect()));
+        let water =
+            dbg!(self.fertilizer_to_water.get_destination_ranges(fertilizer.iter().collect()));
+        let light = dbg!(self.water_to_light.get_destination_ranges(water.iter().collect()));
+        let temperature =
+            dbg!(self.light_to_temperature.get_destination_ranges(light.iter().collect()));
+        let humidity = dbg!(self
+            .temperature_to_humidity
+            .get_destination_ranges(temperature.iter().collect()));
+        let location =
+            dbg!(self.humidity_to_location.get_destination_ranges(humidity.iter().collect()));
+        location
+            .iter()
+            .fold(None, |min: Option<Location>, location_range| {
+                Some(min.unwrap_or(location_range.0).min(location_range.0))
+            })
+            .unwrap()
+    }
+
+    fn get_lowest_location_as_pairs(&self) -> Location {
+        // Extract the ranges from the input
+        let mut seed_ranges = Vec::<(Seed, u64)>::new();
+        let mut seeds = self.seeds.iter();
+        while let Some(start_seed) = seeds.next() {
+            let Some(range )= seeds.next() else { panic!()};
+            seed_ranges.push((*start_seed, *range));
+        }
+
+        self.get_locations_for_seed_ranges(seed_ranges)
+    }
+
     fn get_lowest_location(&self) -> Location {
         self.seeds
             .iter()
             .map(|seed| self.get_location_for_seed(*seed))
-            .map(|seed| dbg!(seed))
             .fold(None, |min: Option<Location>, location| {
                 Some(min.unwrap_or(location).min(location))
             })
@@ -165,13 +209,63 @@ impl DestinationSourceMap {
         &self,
         source: u64,
     ) -> u64 {
-        let tmp = self.mappings.range(..source);
-        let tmp = tmp.last();
-        let tmp = tmp.map(|key| self.map.get(key));
-        let tmp = tmp.flatten();
-        let tmp = tmp.map(|entry| entry.get_destination(source));
-        let tmp = tmp.flatten();
-        let tmp = tmp.unwrap_or(source);
-        tmp
+        self.mappings
+            .range(..source)
+            .last()
+            .map(|key| self.map.get(key))
+            .flatten()
+            .map(|entry| entry.get_destination(source))
+            .flatten()
+            .unwrap_or(source)
+    }
+
+    fn get_destination_ranges(
+        &self,
+        mut source_ranges: Vec<&(u64, u64)>, // Value, Range
+    ) -> Vec<(u64, u64)> {
+        // Sort so we can do it in one pass
+        source_ranges.sort_by(|(lval, _), (rval, _)| lval.cmp(rval));
+
+        let mut sources_iter = source_ranges.iter();
+        let mut mappings_iter = self.mappings.iter();
+
+        let mut current_mapping = mappings_iter.next().map(|key| self.map.get(key)).flatten();
+
+        let mut result: Vec<(u64, u64)> = Vec::new();
+
+        while let Some((start, range)) = sources_iter.next() {
+            let mut start = *start;
+            let mut range = *range;
+            let mut is_done = false;
+
+            while !is_done {
+                // Lookup current mapping (start >= mapping_start, and < mapping_start = range)
+                if let Some(mapping) = current_mapping {
+                    if start > mapping.source_range_start && start < mapping.range_length {
+                        let offset = start - mapping.source_range_start;
+                        let dest_start = offset + mapping.dest_range_start;
+                        if (start + range) > (mapping.source_range_start + mapping.range_length) {
+                            let current_range = mapping.range_length - offset;
+                            result.push((dest_start, current_range));
+
+                            // Set new values
+                            start = start + current_range;
+                            range = range - current_range;
+                        } else {
+                            // DONE (with this group)
+                            result.push((dest_start, range));
+                            is_done = true;
+                        }
+                    } else {
+                        current_mapping =
+                            mappings_iter.next().map(|key| self.map.get(key)).flatten();
+                    }
+                } else {
+                    result.push((start, range));
+                    is_done = true;
+                }
+            }
+        }
+        result
     }
 }

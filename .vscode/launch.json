@@ -100,6 +100,43 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug executable 'day_6'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=day_6",
+                    "--package=advent_of_code_2023"
+                ],
+                "filter": {
+                    "name": "day_6",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'day_6'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=day_6",
+                    "--package=advent_of_code_2023"
+                ],
+                "filter": {
+                    "name": "day_6",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'day_2'",
             "cargo": {
                 "args": [
