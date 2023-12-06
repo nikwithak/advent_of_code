@@ -137,6 +137,43 @@
         {
             "type": "lldb",
             "request": "launch",
+            "name": "Debug executable 'day_5'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=day_5",
+                    "--package=advent_of_code_2023"
+                ],
+                "filter": {
+                    "name": "day_5",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'day_5'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=day_5",
+                    "--package=advent_of_code_2023"
+                ],
+                "filter": {
+                    "name": "day_5",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
             "name": "Debug executable 'day_1_trebuchet'",
             "cargo": {
                 "args": [
