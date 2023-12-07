@@ -11,39 +11,42 @@ mod tests {
 
     #[test]
     fn part_1_sample() {
-        let input = parse_input("inputs/day_7_sample.txt");
+        let input = parse_input("inputs/day_7_sample.txt", false);
         let result = score_hands(input);
         assert_eq!(result, 6440);
     }
     #[test]
     fn part_1_final() {
-        let input = parse_input("inputs/day_7.txt");
+        let input = parse_input("inputs/day_7.txt", false);
         let result = score_hands(input);
         assert_eq!(result, 250957639);
- 
+    }
+
     #[test]
     fn part_2_sample() {
-        let input = parse_input("inputs/day_7_sample.txt");
+        let input = parse_input("inputs/day_7_sample.txt", true);
         let result = score_hands(input);
-        assert_eq!(result, 6440);
+        assert_eq!(result, 5905);
     }
     #[test]
     fn part_2_final() {
-        let input = parse_input("inputs/day_7.txt");
+        let input = parse_input("inputs/day_7.txt", true);
         let result = score_hands(input);
-        assert_eq!(result, 250957639);
-    }   }
+        assert_eq!(result, 251515496);
+    }
 }
 
 fn main() {}
 
+#[derive(Debug)]
 struct Hand {
     cards: Vec<Rank>,
     bid: u64,
 }
 
-#[derive(PartialEq, PartialOrd, Ord, Eq, Hash)]
+#[derive(PartialEq, PartialOrd, Ord, Eq, Hash, Debug)]
 enum Rank {
+    Joker,
     Number(u8),
     J,
     Q,
@@ -51,7 +54,7 @@ enum Rank {
     A,
 }
 
-#[derive(PartialEq, PartialOrd, Ord, Eq)]
+#[derive(PartialEq, PartialOrd, Ord, Eq, Debug)]
 enum HandType {
     HighCard,
     OnePair,
@@ -70,8 +73,17 @@ impl Hand {
             map.insert(card, val + 1);
         }
 
+        // PART 2: Account for jokers
+        if map.len() > 1 {
+            if let Some(jokers) = map.remove(&Rank::Joker) {
+                let mut values = map.values_mut().collect::<Vec<_>>();
+                values.sort();
+                values.last_mut().map(|v| **v += jokers);
+            }
+        }
+
         type H = HandType;
-        map.values().fold(H::HighCard, |acc, val| match (&acc, val) {
+        let hand_type = map.values().fold(H::HighCard, |acc, val| match (&acc, val) {
             (H::HighCard, 2) => H::OnePair,
             (H::HighCard, 3) => H::ThreeOfAKind,
             (H::HighCard, 4) => H::FourOfAKind,
@@ -81,7 +93,8 @@ impl Hand {
             (H::ThreeOfAKind, 2) => H::FullHouse,
             // Nothing else should be possible (don't need to worry about straights / flushes)
             _ => acc,
-        })
+        });
+        hand_type
     }
 }
 
@@ -110,7 +123,10 @@ fn score_hands(mut hands: Vec<Hand>) -> u64 {
     total
 }
 
-fn parse_input(filename: &str) -> Vec<Hand> {
+fn parse_input(
+    filename: &str,
+    jokers_enabled: bool,
+) -> Vec<Hand> {
     let reader = BufReader::new(File::open(filename).unwrap());
     let mut hands = Vec::new();
     for line in reader.lines() {
@@ -129,7 +145,13 @@ fn parse_input(filename: &str) -> Vec<Hand> {
                     'A' => Rank::A,
                     'K' => Rank::K,
                     'Q' => Rank::Q,
-                    'J' => Rank::J,
+                    'J' => {
+                        if jokers_enabled {
+                            Rank::Joker
+                        } else {
+                            Rank::J
+                        }
+                    },
                     _ => panic!("invalid card"),
                 })
                 .collect(),
