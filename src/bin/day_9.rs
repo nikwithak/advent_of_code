@@ -21,6 +21,21 @@ mod tests {
 
         assert_eq!(result, 1702218515);
     }
+
+    #[test]
+    fn part_2_sample() {
+        let input = parse_input("inputs/day_9_sample.txt");
+        let result = calculate_left_values(input);
+
+        assert_eq!(result, 2);
+    }
+    #[test]
+    fn part_2_final() {
+        let input = parse_input("inputs/day_9.txt");
+        let result = calculate_left_values(input);
+
+        assert_eq!(result, 925);
+    }
 }
 
 fn main() {}
@@ -37,6 +52,13 @@ impl ValueHistory {
             layers,
         }
     }
+}
+
+fn calculate_left_values(input: Vec<ValueHistory>) -> i64 {
+    dbg!(input).into_iter().fold(0, |acc, mut val| {
+        val.calculate_rows();
+        acc + val.calculate_prev_value()
+    })
 }
 
 fn calculate_new_values(input: Vec<ValueHistory>) -> i64 {
@@ -60,6 +82,15 @@ impl ValueHistory {
         }
     }
 
+    fn calculate_prev_value(&mut self) -> i64 {
+        let mut iter = self.layers.iter_mut().rev();
+
+        let mut prev_val = 0;
+        while let Some(row) = iter.next() {
+            prev_val = row.first().unwrap() - prev_val;
+        }
+        prev_val
+    }
     fn calculate_next_value(&mut self) -> i64 {
         let mut iter = self.layers.iter_mut().rev();
 
