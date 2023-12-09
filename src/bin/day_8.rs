@@ -86,9 +86,7 @@ impl SolutionMap {
             mut b: u64,
         ) -> u64 {
             while b != 0 {
-                let new_a = b;
-                b = a % b;
-                a = new_a;
+                (a, b) = (b, a % b);
             }
             a
         }
