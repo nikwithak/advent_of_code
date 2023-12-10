@@ -24,7 +24,7 @@ mod tests {
     #[test]
     fn part_2_final() {
         let mut input = load_input("inputs/day_10.txt");
-        assert_eq!(count_area_in_loop(&mut input), 0);
+        assert_eq!(count_area_in_loop(&mut input), 407);
     }
 }
 
@@ -128,7 +128,16 @@ fn count_area_in_loop(input: &mut Vec<Vec<u8>>) -> u64 {
             .map(|line| line
                 .iter()
                 .map(|(b, part_of_path)| if *part_of_path {
-                    *b as char
+                    // Display characters ref: https://gist.github.com/icub3d/0814b8ab7c87d581f02c3bc7248370b8#file-main-rs-L71-L82
+                    match *b as char {
+                        '|' => '│',
+                        '-' => '─',
+                        'L' => '└',
+                        'J' => '┘',
+                        '7' => '┐',
+                        'F' => '┌',
+                        _ => ' ',
+                    }
                 } else {
                     ' '
                 })
