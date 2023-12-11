@@ -9,12 +9,24 @@ mod tests {
     #[test]
     fn part_1_sample() {
         let input = parse_input("inputs/day_11_sample.txt");
-        assert_eq!(sum_of_shortest_paths(input), 374);
+        assert_eq!(sum_of_shortest_paths(input, 1), 374);
     }
     #[test]
     fn part_1_final() {
         let input = parse_input("inputs/day_11.txt");
-        assert_eq!(sum_of_shortest_paths(input), 374);
+        assert_eq!(sum_of_shortest_paths(input, 1), 9648398);
+    }
+
+    #[test]
+    fn part_2_sample() {
+        let input = parse_input("inputs/day_11_sample.txt");
+        assert_eq!(sum_of_shortest_paths(input, 99), 8410);
+    }
+    #[test]
+    fn part_2_final() {
+        let input = parse_input("inputs/day_11.txt");
+
+        assert_eq!(sum_of_shortest_paths(input, 999999), 9648398);
     }
 }
 
@@ -44,21 +56,26 @@ fn get_shortest_path(
     a: &Point,
     b: &Point,
     input: &Solution,
-) -> u64 {
+    size_of_empty: usize,
+) -> usize {
     let y_range = min(a.y, b.y)..max(a.y, b.y);
     let x_range = min(a.x, b.x)..max(a.x, b.x);
     let mut num_col_gaps = y_range.filter(|col| !input.cols_with_galaxies.contains(col)).count();
     let mut num_row_gaps = x_range.filter(|row| !input.rows_with_galaxies.contains(row)).count();
 
-    ((a.x.abs_diff(b.x) + num_row_gaps) + (a.y.abs_diff(b.y) + num_col_gaps)) as u64
+    ((a.x.abs_diff(b.x) + num_row_gaps * size_of_empty)
+        + (a.y.abs_diff(b.y) + num_col_gaps * size_of_empty))
 }
 
-fn sum_of_shortest_paths(mut input: Solution) -> u64 {
+fn sum_of_shortest_paths(
+    mut input: Solution,
+    size_of_empty: usize,
+) -> usize {
     let mut sum = 0;
     let galaxies = &input.galaxy_locations;
     for i in 0..input.galaxy_locations.len() {
         for j in i..input.galaxy_locations.len() {
-            let path = get_shortest_path(&galaxies[i], &galaxies[j], &input);
+            let path = get_shortest_path(&galaxies[i], &galaxies[j], &input, size_of_empty);
             sum += path;
         }
     }
