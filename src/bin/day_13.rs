@@ -8,28 +8,6 @@ mod tests {
         assert_eq!(result, 405);
     }
     #[test]
-    fn horizontal_split() {
-        let input: Vec<String> = r"
-.##.##...
-.#...#...
-###.#.###
-#......##
-.##.#####
-###.#..##
-.#....#..
-##...#...
-#.##.#.##
-#.##.####
-##...#...
-"
-        .lines()
-        .filter(|s| !s.is_empty())
-        .map(|s| s.to_string())
-        .collect();
-
-        assert_eq!(find_mirror_value(&input), 8);
-    }
-    #[test]
     fn p1_final() {
         let input = parse_input("inputs/day_13.txt");
         let result = sum_mirror_values(&input);
@@ -82,30 +60,12 @@ fn sum_mirror_values_with_smudges(
 }
 
 // Returns (columns to left of vertical split) + (100 * rows above horizontal split)
-fn find_mirror_value(rows: &Vec<String>) -> usize {
-    find_mirror_value_with_smudges(rows, 0)
-}
 fn find_mirror_value_with_smudges(
     rows: &Vec<String>,
     required_smudges: usize,
 ) -> usize {
     let num_rows = find_horizontal_split_with_smudges(rows, required_smudges);
     let num_cols = find_vertical_split_with_smudges(rows, required_smudges);
-
-    // BUG: I think the problem / inputs are borked. My input definitely has some inputs with more than one reflection line.
-    // If somebody knows why this solution is failing, please let me know, but until then: I used someone else's solution to get the "other" answer.
-    if required_smudges > 0 {
-        if num_rows > 0 {
-            assert_ne!(num_rows, find_horizontal_split(rows));
-        }
-        if num_cols > 0 {
-            assert_ne!(num_cols, find_vertical_split(rows));
-        }
-    }
-
-    // BUG (with the puzzle): The solution expects there to be only ONE split, so this accounts for situations/
-    // where there's both a horizontal and vertical split.
-
     100 * num_rows + num_cols
 }
 
@@ -114,9 +74,7 @@ fn find_horizontal_split_with_smudges(
     num_smudges: usize,
 ) -> usize {
     for i in (0..rows.len()) {
-        if is_split_by_row_with_smudges(i, i + 1, rows, num_smudges)
-        // || is_split_by_row_with_smudges(i, i + 2, rows, num_smudges)
-        {
+        if is_split_by_row_with_smudges(i, i + 1, rows, num_smudges) {
             return i + 1;
         }
     }
@@ -128,27 +86,7 @@ fn find_vertical_split_with_smudges(
     num_smudges: usize,
 ) -> usize {
     for i in 0..rows[0].len() {
-        if is_split_by_col_with_smudge(i, i + 1, rows, num_smudges)
-        // || is_split_by_col_with_smudge(i, i + 2, rows, num_smudges)
-        {
-            return i + 1;
-        }
-    }
-    0
-}
-
-fn find_horizontal_split(rows: &Vec<String>) -> usize {
-    for i in 0..rows.len() {
-        if is_split_by_row(i, i + 1, rows) || is_split_by_row(i, i + 2, rows) {
-            return i + 1;
-        }
-    }
-    0
-}
-
-fn find_vertical_split(rows: &Vec<String>) -> usize {
-    for i in 0..rows[0].len() {
-        if is_split_by_col(i, i + 1, rows) || is_split_by_col(i, i + 2, rows) {
+        if is_split_by_col_with_smudge(i, i + 1, rows, num_smudges) {
             return i + 1;
         }
     }
@@ -189,14 +127,6 @@ fn is_split_by_col_with_smudge(
     required_smudges == num_smudges
 }
 
-fn is_split_by_col(
-    l_end: usize,
-    r_start: usize,
-    rows: &Vec<String>,
-) -> bool {
-    is_split_by_col_with_smudge(l_end, r_start, rows, 0)
-}
-
 fn is_split_by_row_with_smudges(
     top_end: usize,
     bottom_start: usize,
@@ -235,14 +165,6 @@ fn is_split_by_row_with_smudges(
         top_marker -= 1;
     }
     return num_smudges == required_smudges;
-}
-
-fn is_split_by_row(
-    top_end: usize,
-    bottom_start: usize,
-    rows: &Vec<String>,
-) -> bool {
-    is_split_by_row_with_smudges(top_end, bottom_start, rows, 0)
 }
 
 fn parse_input(filename: &str) -> Vec<Vec<String>> {
