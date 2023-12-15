@@ -229,14 +229,12 @@ fn part_2(mut input: Solution) -> usize {
         println!("Load Value: {}", &input.calc_total_load());
         println!();
         if !loop_found && memo.contains_key(&input.chars) {
-            if let Some(prev) = memo.get(&input.chars) {
-                let loop_iter = prev - i;
-                println!("First hit: {}", prev);
-                println!("Loop found at i: {}", i);
-                loop_found = true;
-                i = i % loop_iter;
-            }
+            loop_found = true;
+            let prev = memo.get(&input.chars).unwrap();
+            let loop_iter = prev - i;
+            i = i % loop_iter;
         } else {
+            // Store the state so we can detect a loop
             memo.insert(input.chars.clone(), i);
         }
         i -= 1;
