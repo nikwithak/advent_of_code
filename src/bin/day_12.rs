@@ -1,22 +1,16 @@
-use std::{
-    collections::{HashMap, HashSet},
-    env::current_dir,
-    iter::Enumerate,
-    str::Chars,
-    time,
-};
-
-use reqwest::StatusCode;
+use std::{collections::HashMap, time};
 
 // This one got particularly convoluted as I tried multiple different approaches.
+// I ended up implementing a (roundabout) iterative approach AND a (much simpler) recursive approach.
+// Recrusive is between 1/3 and 1/2 faster, interestingly. Probably a lot of compiler help there.
 
 #[cfg(test)]
 mod tests {
     use super::*;
     #[test]
-    fn part_1_sample() {
+    fn part_1_sample_individual_lines() {
         let lines = vec![
-            // ("???.### 1,1,3", 1),
+            ("???.### 1,1,3", 1),
             (".??..??...?##. 1,1,3", 4),
             ("?#?#?#?#?#?#?#? 1,3,1,6", 1),
             ("????.#...#... 4,1,1", 1),
@@ -26,8 +20,10 @@ mod tests {
 
         for line in lines {
             assert_eq!(count_possibilities(&line.0), line.1);
-            // println!("PASSED: {} = {}", &line.0, &line.1);
         }
+    }
+    #[test]
+    fn part_1_sample() {
         let result = sum_possible_arrangements("inputs/day_12_sample.txt");
         assert_eq!(result, 21);
     }
@@ -44,15 +40,30 @@ mod tests {
     }
 
     #[test]
-    fn part_2_final() {
+    fn part_2_final_default() {
         let result = sum_possible_arrangements_with_fold("inputs/day_12.txt", 5);
         assert_eq!(result, 2043098029844);
     }
+    #[test]
+    fn part_2_final_recursive() {
+        // Same test as above, but explicitly using Recursive approach
+        let result = sum_possible_arrangements_with_fold_with_strategy(
+            "inputs/day_12.txt",
+            5,
+            Strategy::Recursive,
+        );
+        assert_eq!(result, 2043098029844);
+    }
+    #[test]
+    fn part_2_final_iterative() {
+        let result = sum_possible_arrangements_with_fold_with_strategy(
+            "inputs/day_12.txt",
+            5,
+            Strategy::Iterative,
+        );
+        assert_eq!(result, 2043098029844);
+    }
 }
-
-// For each segment, find: {
-// 1) If it is entierly ?s, then we can fit a maximum of:
-//    - ???? 2 1 = ##
 
 #[derive(Clone, Debug)]
 struct StateMachine<'a> {
@@ -182,15 +193,103 @@ impl<'a> StateMachine<'a> {
             i: 0,
         }
     }
+
+    fn get_key(&self) -> MemoKey {
+        MemoKey {
+            current: self.current.clone(),
+            groups: self.groups.clone(),
+            i: self.i,
+        }
+    }
+}
+
+impl StateMachine<'_> {
+    fn count_possibilities_iterative(&self) -> usize {
+        let mut stack: Vec<StateMachine> = vec![self.clone()];
+        let mut memo: HashMap<MemoKey, usize> = HashMap::new();
+
+        while !stack.is_empty() {
+            let state = stack.pop().unwrap();
+
+            if let Some(_) = memo.get(&state.get_key()) {
+                // println!("CACHED: {} ({})", &state.my_guess, value);
+                // If it's already calculated, we can skip
+            } else if state.get_status() == Status::Success {
+                // println!("{} ({})", &state.my_guess, 1);
+                // If it's done, then we stop!
+                memo.insert(state.get_key(), 1);
+            } else {
+                let next_states = state.step();
+                if next_states.iter().filter(|s| !memo.contains_key(&s.get_key())).count() == 0 {
+                    // We have enough to calculate!
+                    let value = next_states
+                        .iter()
+                        .map(|s| *memo.get(&s.get_key()).unwrap())
+                        .reduce(|acc, count| acc + count)
+                        .unwrap_or(0);
+                    memo.insert(state.get_key(), value);
+                } else {
+                    stack.push(state);
+                    next_states
+                        .into_iter()
+                        .filter(|s| !memo.contains_key(&s.get_key()))
+                        .map(|s| s)
+                        .for_each(|s| stack.push(s));
+                }
+            };
+        }
+
+        *memo.get(&self.get_key()).unwrap()
+    }
+
+    fn count_possibilities_recursive(self) -> usize {
+        let mut memo: HashMap<MemoKey, usize> = HashMap::new();
+        fn recurse(
+            memo: &mut HashMap<MemoKey, usize>,
+            state: &StateMachine,
+        ) -> usize {
+            let value = if let Some(value) = memo.get(&state.get_key()) {
+                *value
+            } else if state.get_status() == Status::Success {
+                // println!("{} ({})", &state.my_guess, 1);
+                1
+            } else {
+                let mut calced_value = 0;
+                for mut new_state in state.step() {
+                    calced_value += recurse(memo, &mut new_state);
+                }
+                // println!("{} ({})", &state.my_guess, calced_value);
+                calced_value
+            };
+            memo.insert(state.get_key(), value);
+            value
+        }
+        return recurse(&mut memo, &self);
+    }
 }
 
 fn count_possibilities(line: &str) -> usize {
-    count_possibilities_with_fold(line, 1)
+    count_possibilities_with_fold_recursive(line, 1)
 }
 
-fn count_possibilities_with_fold(
+fn count_possibilities_with_fold_recursive(
     line: &str,
     fold: usize,
+) -> usize {
+    count_possibilities_with_fold_with_strategy(line, fold, Strategy::Recursive)
+}
+
+fn count_possibilities_with_fold_iterative(
+    line: &str,
+    fold: usize,
+) -> usize {
+    count_possibilities_with_fold_with_strategy(line, fold, Strategy::Iterative)
+}
+
+fn count_possibilities_with_fold_with_strategy(
+    line: &str,
+    fold: usize,
+    strategy: Strategy,
 ) -> usize {
     let mut problem_parts = line.split_whitespace();
     let (orig_row, groups) = (problem_parts.next().unwrap(), problem_parts.next().unwrap());
@@ -208,105 +307,97 @@ fn count_possibilities_with_fold(
     row.push_str(orig_row);
     row = row.split(".").filter(|s| !s.is_empty()).collect::<Vec<_>>().join(".");
 
-    let mut memo: HashMap<MemoKey, usize> = HashMap::new();
-
     // Start stack with basic state
     let start = StateMachine::new(group_nums.clone(), &row);
-
-    // let mut stack: Vec<StateMachine> = vec![start.clone()];
-
-    // while !stack.is_empty() {
-    //     let mut state = stack.pop().unwrap();
-    //     // println!("CHECKING STATE: {}", &state.my_guess);
-
-    //     if let Some(value) = memo.get(&(&state).into()) {
-    //         // println!("CACHED: {} ({})", &state.my_guess, value);
-    //         // If it's already calculated, we can skip
-    //     } else if state.get_status() == Status::Success {
-    //         println!("{} ({})", &state.my_guess, 1);
-    //         // If it's done, then we stop!
-    //         memo.insert((&state).into(), 1);
-    //     } else {
-    //         let next_states = state.step();
-    //         if next_states.iter().filter(|s| !memo.contains_key(&(*s).into())).count() == 0 {
-    //             // We have enough to calculate!
-    //             let value = next_states
-    //                 .iter()
-    //                 .map(|s| *memo.get(&s.into()).unwrap())
-    //                 .reduce(|acc, count| acc + count)
-    //                 .unwrap_or(0);
-    //             memo.insert((&state).into(), value);
-    //             println!("{} ({})", &state.my_guess, value);
-    //         } else {
-    //             stack.push(state);
-    //             next_states
-    //                 .into_iter()
-    //                 .filter(|s| !memo.contains_key(&s.into()))
-    //                 .map(|s| {
-    //                     // println!("NEW STATE: {}", &s.my_guess);
-    //                     s
-    //                 })
-    //                 .for_each(|s| stack.push(s));
-    //         }
-    //     };
-    // }
-
-    // *memo.get(&(&start).into()).unwrap()
-
-    fn recurse(
-        memo: &mut HashMap<MemoKey, usize>,
-        state: &mut StateMachine,
-    ) -> usize {
-        let value = if let Some(value) = memo.get(&(&*state).into()) {
-            *value
-        } else if state.get_status() == Status::Success {
-            // println!("{} ({})", &state.my_guess, 1);
-            1
-        } else {
-            let mut calced_value = 0;
-            for mut new_state in state.step() {
-                calced_value += recurse(memo, &mut new_state);
-            }
-            // println!("{} ({})", &state.my_guess, calced_value);
-            calced_value
-        };
-        memo.insert((&*state).into(), value);
-        value
-    }
-    return recurse(&mut memo, &mut StateMachine::new(group_nums.clone(), &row));
-}
-
-impl From<&StateMachine<'_>> for MemoKey {
-    fn from(value: &StateMachine) -> Self {
-        Self {
-            current: value.current.clone(),
-            groups: value.groups.clone(),
-            i: value.i,
-        }
+    match strategy {
+        Strategy::Recursive => start.count_possibilities_recursive(),
+        Strategy::Iterative => start.count_possibilities_iterative(),
     }
 }
+
 fn sum_possible_arrangements(filename: &str) -> usize {
-    sum_possible_arrangements_with_fold(filename, 1)
+    sum_possible_arrangements_with_fold_with_strategy(filename, 1, Strategy::Recursive)
+}
+enum Strategy {
+    Recursive,
+    Iterative,
 }
 fn sum_possible_arrangements_with_fold(
     filename: &str,
     fold: usize,
 ) -> usize {
+    sum_possible_arrangements_with_fold_with_strategy(filename, fold, Strategy::Recursive)
+}
+
+fn sum_possible_arrangements_with_fold_with_strategy(
+    filename: &str,
+    fold: usize,
+    strategy: Strategy,
+) -> usize {
     let input = std::fs::read_to_string(filename).unwrap();
     let lines = input.lines();
     let mut sum = 0;
     for line in lines {
-        let time = time::SystemTime::now();
-        sum += count_possibilities_with_fold(line, fold);
-        let end_time = time::SystemTime::now();
-        println!(
-            "{}: {} - took {} ms",
-            line,
-            sum,
-            (end_time.duration_since(time).unwrap().as_millis())
-        );
+        sum += match strategy {
+            Strategy::Recursive => count_possibilities_with_fold_recursive(line, fold),
+            Strategy::Iterative => count_possibilities_with_fold_iterative(line, fold),
+        };
     }
     sum
 }
 
-fn main() {}
+/// Runs parts 1 and 2 with both recursive and iterative approaches, and times each.
+fn main() {
+    let start_time = time::SystemTime::now();
+    let result = sum_possible_arrangements_with_fold_with_strategy(
+        "inputs/day_12.txt",
+        1,
+        Strategy::Recursive,
+    );
+    let end_time = time::SystemTime::now();
+    println!(
+        "Part 1 (Recursive): {} ({} ms))",
+        result,
+        end_time.duration_since(start_time).unwrap().as_millis()
+    );
+
+    let start_time = time::SystemTime::now();
+    let result = sum_possible_arrangements_with_fold_with_strategy(
+        "inputs/day_12.txt",
+        1,
+        Strategy::Iterative,
+    );
+    let end_time = time::SystemTime::now();
+    println!(
+        "Part 1 (Iterative): {} ({} ms))",
+        result,
+        end_time.duration_since(start_time).unwrap().as_millis()
+    );
+
+    let start_time = time::SystemTime::now();
+    let result = sum_possible_arrangements_with_fold_with_strategy(
+        "inputs/day_12.txt",
+        5,
+        Strategy::Recursive,
+    );
+    let end_time = time::SystemTime::now();
+    println!(
+        "Part 2 (Recursive): {} ({} ms))",
+        result,
+        end_time.duration_since(start_time).unwrap().as_millis()
+    );
+
+    let start_time = time::SystemTime::now();
+    let result = sum_possible_arrangements_with_fold_with_strategy(
+        "inputs/day_12.txt",
+        5,
+        Strategy::Iterative,
+    );
+    let end_time = time::SystemTime::now();
+    println!(
+        "Part 2 (Iterative): {} ({} ms))",
+        result,
+        end_time.duration_since(start_time).unwrap().as_millis()
+    );
+}
+//
