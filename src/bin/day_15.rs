@@ -26,7 +26,7 @@ mod tests {
     }
     #[test]
     fn test_part_2_final() {
-        assert_eq!(part_2("inputs/day_15.txt"), 145)
+        assert_eq!(part_2("inputs/day_15.txt"), 233537)
     }
 }
 
@@ -47,6 +47,7 @@ impl<V> DerefMut for OrderedMapEntry<V> {
     }
 }
 
+// A HashMap wrapper to preserve order of things inserted. O(1) for get and insert, but it doesn't maintain order, so you must sort
 #[derive(Default)]
 struct OrderedHashMap<K, V> {
     map: HashMap<K, OrderedMapEntry<V>>,
@@ -95,27 +96,27 @@ where
 
 fn part_2(filename: &str) -> usize {
     let input = std::fs::read_to_string(filename).unwrap();
-    // I think it wants me to use a linkedlist...
-    // I bet the input sequence is designed to cause exponential growth if we have to scan the array each time
-    let mut boxes: HashMap<u8, OrderedHashMap<&str, u8>> = Default::default();
+    // Yes, I know I was supposed to use a LinkedList. The Rust docs got in my head
+    // ("Use a LinkedList when...You are absolutely certain you really, truly, want a doubly linked list.")
+    let mut boxes: [OrderedHashMap<&str, u8>; 256] = core::array::from_fn(|_| Default::default());
 
     for s in input.split(",") {
         let i_operation = s.find(&['-', '=']).unwrap();
         let operation = &s.as_bytes()[i_operation];
         let label = &s[0..i_operation];
         let box_id = hash(label);
+        let container = &mut boxes[box_id];
 
         match *operation as char {
             '-' => {
                 // Go to relevant box
-                let container = boxes.entry(box_id as u8).or_default();
 
                 // Remove the lens with the label
                 let _ = container.remove(&label);
             },
             '=' => {
                 let focal_length: u8 = s[(i_operation + 1)..s.len()].parse().unwrap();
-                *boxes.entry(box_id as u8).or_default().get_or_default(&label) = focal_length;
+                *container.get_or_default(&label) = focal_length;
             },
             _ => panic!(),
         }
@@ -123,6 +124,7 @@ fn part_2(filename: &str) -> usize {
 
     let val = boxes
         .iter()
+        .enumerate()
         .map(|(box_id, box_contents)| (box_id, box_contents))
         .map(|(box_id, box_contents)| {
             let mut sorted_contents = box_contents.iter().collect::<Vec<_>>();
@@ -134,7 +136,7 @@ fn part_2(filename: &str) -> usize {
                     println!("i: {}", &i);
                     println!("focal_length: {}", **focal_length.deref());
                     println!("box_id: {}", &box_id);
-                    (i + 1) * **focal_length.deref() as usize * (*box_id as usize + 1) as usize
+                    (i + 1) * **focal_length.deref() as usize * (box_id + 1) as usize
                 })
                 .reduce(|acc, v| acc + v);
             total_value
