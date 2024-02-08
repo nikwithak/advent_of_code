@@ -19,3 +19,8 @@ Run `cargo test` to run all tests. To run a specific day `n`, use
 For any questions about my solutions, approach, or if you discover an
 undocumented bug, feel free to
 [open an Issue](https://github.com/nikwithak/advent_of_code_2023/issues/new/choose).
+
+### Status
+
+Life got busy during the holidays, and I didn't have time to look at the last several
+days of challenges. This repo is unmaintained.
