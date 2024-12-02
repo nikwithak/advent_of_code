@@ -1,15 +1,18 @@
 // Historian Hysteria
 
-use std::{collections::HashMap, num::ParseIntError};
+use std::collections::HashMap;
 
 use crate::Error;
 
+/// Runs the input and prints out the values from part 1 & part 2.
 pub fn run_day_1() {
     let input = std::fs::read_to_string("inputs/01.txt").unwrap();
     println!("Total distance: {}", part_1(&input).unwrap());
     println!("Total similarity score: {}", part_2(&input).unwrap());
 }
 
+/// Calculates the total distance between the values in the two lists
+/// by comparing the lowest from each list, then the next lowest from each list, etc.
 pub fn part_1(input: &str) -> Result<usize, Error> {
     let (mut l, mut r) = parse(input)?;
     l.sort();
@@ -21,8 +24,13 @@ pub fn part_1(input: &str) -> Result<usize, Error> {
     Ok(sum)
 }
 
+/// Calculates the "Similarity Score". For a given number N:
+/// L(N) = The number of times N appears in the left column.
+/// R(N) = The number of times N appears in the right column
+///
+/// Similarity Score = N * L(N) * R(N)
 pub fn part_2(input: &str) -> Result<usize, Error> {
-    let (mut l, mut r) = parse(input)?;
+    let (l, r) = parse(input)?;
     let mut binned: HashMap<usize, (usize, usize)> = HashMap::new();
     for l in l {
         let entry = binned.entry(l).or_insert((0, 0));
@@ -38,8 +46,7 @@ pub fn part_2(input: &str) -> Result<usize, Error> {
     Ok(dbg!(result))
 }
 
-// pub fn part_2(input: &str) -> Result<usize, Error> {}
-
+/// Parses the input string into the two vectors - left column and right column.
 pub fn parse(input: &str) -> Result<(Vec<usize>, Vec<usize>), Error> {
     let (mut l_vals, mut r_vals) = (Vec::new(), Vec::new());
     for line in input.lines() {

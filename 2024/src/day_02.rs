@@ -4,18 +4,23 @@ use crate::Error;
 
 pub fn run_day_2() {
     let input = std::fs::read_to_string("inputs/02.txt").unwrap();
-    println!("Total distance: {}", part_1(&input).unwrap());
-    println!("Total similarity score: {}", part_2(&input).unwrap());
+    println!("Total safe rows (part 1): {}", part_1(&input).unwrap());
+    println!("Total safe rows (part 2): {}", part_2(&input).unwrap());
 }
 
 pub fn part_1(input: &str) -> Result<usize, Error> {
     Ok(input
         .lines()
         .map(|line| line.split_whitespace().map(|s| s.parse::<i32>().unwrap()).collect::<Vec<_>>())
+        // Note: Some(usize::MAX) is used here to allow us to use the same function for parts 1 & 2.
+        // This will fail the edge case where there are usize::MAX values in the list, and the last value triggers an Unsafe condition.
         .filter(|s| is_safe_with_errors(s, Some(usize::MAX)))
         .count())
 }
 
+/// DEPRECATED
+///
+/// This is the original function for part 1, before consolidating them into a single function.
 fn _is_safe(vals: &Vec<i32>) -> bool {
     let mut vals = vals.iter();
 
@@ -25,18 +30,15 @@ fn _is_safe(vals: &Vec<i32>) -> bool {
     let mut direction = 0;
     while let Some(val) = vals.next() {
         let diff = val - prev;
-        if diff == 0 {
+        if diff == 0
+            || (direction != 0 && diff / diff.abs() != direction)
+            || diff.abs() < 1
+            || diff.abs() > 3
+        {
             return false;
         }
-        let m_direction = diff / diff.abs();
         if direction == 0 {
-            direction = m_direction;
-        }
-        if direction != m_direction {
-            return false;
-        }
-        if diff.abs() < 1 || diff.abs() > 3 {
-            return false;
+            direction = diff / diff.abs();
         }
         prev = val;
     }
@@ -48,9 +50,6 @@ fn is_safe_with_errors(
     skip: Option<usize>,
 ) -> bool {
     let mut vals = input_vals.iter().enumerate();
-
-    println!("INPUT: {:?}", input_vals);
-    println!("SKIPPING: {:?}", &skip);
 
     if let Some(0) = skip {
         let _ = vals.next();
@@ -64,7 +63,11 @@ fn is_safe_with_errors(
             continue;
         }
         let diff = val - prev;
-        if diff == 0 {
+        if diff == 0
+            || (direction != 0 && diff / diff.abs() != direction)
+            || diff.abs() < 1
+            || diff.abs() > 3
+        {
             if skip.is_none() {
                 return is_safe_with_errors(input_vals, Some(_i))
                     || is_safe_with_errors(input_vals, Some(_i - 1));
@@ -72,35 +75,21 @@ fn is_safe_with_errors(
                 return false;
             }
         }
-        let m_direction = diff / diff.abs();
         if direction == 0 {
-            direction = m_direction;
-        }
-        if direction != m_direction || diff.abs() < 1 || diff.abs() > 3 {
-            if skip.is_none() {
-                return is_safe_with_errors(input_vals, Some(_i))
-                    || is_safe_with_errors(input_vals, Some(_i - 1));
-            } else {
-                return false;
-            }
+            direction = diff / diff.abs();
         }
         prev = val;
     }
     true
 }
 
+/// Calculates the number of "safe" lines.
 pub fn part_2(input: &str) -> Result<usize, Error> {
     Ok(input
         .lines()
         .map(|line| line.split_whitespace().map(|s| s.parse::<i32>().unwrap()).collect::<Vec<_>>())
         .filter(|s| dbg!(is_safe_with_errors(s, None)))
         .count())
-}
-
-// pub fn part_2(input: &str) -> Result<usize, Error> {}
-
-pub fn parse(input: &str) -> Result<(Vec<usize>, Vec<usize>), Error> {
-    todo!()
 }
 
 #[test]
