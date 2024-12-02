@@ -1,17 +1,16 @@
-pub fn add(
-    left: u64,
-    right: u64,
-) -> u64 {
-    left + right
+use std::num::ParseIntError;
+
+pub mod day_01;
+pub mod day_02;
+
+#[derive(Debug)]
+pub enum Error {
+    String(String),
+    ParseError(ParseIntError),
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+impl<T: Into<String>> From<T> for Error {
+    fn from(s: T) -> Self {
+        Self::String(s.into())
     }
 }
