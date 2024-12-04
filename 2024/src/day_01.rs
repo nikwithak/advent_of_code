@@ -61,7 +61,7 @@ pub fn parse(input: &str) -> Result<(Vec<usize>, Vec<usize>), Error> {
 
 #[test]
 fn test_part_1() -> Result<(), Error> {
-    let input = std::fs::read_to_string("inputs/01_1.txt").unwrap();
+    let input = std::fs::read_to_string("inputs/01.txt").unwrap();
     assert_eq!(1223326, part_1(&input)?);
     Ok(())
 }
