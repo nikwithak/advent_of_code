@@ -1,9 +1,12 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    cmp::Ordering,
+    collections::{HashMap, HashSet},
+};
 
-pub fn run_day_4() {
+pub fn run_day_5() {
     let input = std::fs::read_to_string("input/04.txt").unwrap();
-    println!("Day 4 Part 1: {}", part_1(&input));
-    println!("Day 4 Part 2: {}", part_2(&input));
+    println!("Day 5 Part 1: {}", part_1(&input));
+    println!("Day 5 Part 2: {}", part_2(&input));
 }
 
 fn part_1(input: &str) -> i32 {
@@ -66,39 +69,39 @@ fn build_predecessor_map(input: &str) -> HashMap<usize, Vec<usize>> {
 }
 
 fn part_2(input: &str) -> i32 {
-    let (rules, updates) = parse(input);
+    let (rules, mut updates) = parse(input);
     updates
-        .into_iter()
+        .iter_mut()
+        .filter(|update| !is_valid_page(update, &rules))
         .map(|update| {
-            if is_valid_page(&update, &rules) {
-                update
-            } else {
-                reorder_update(update, &rules)
-            }
+            sort_update(update, &rules);
+            update
         })
         .map(|update| dbg!(update[update.len() / 2]) as i32)
         .reduce(|acc, update| acc + update)
         .unwrap_or(0)
 }
 
-fn reorder_update(
-    update: Update,
+fn sort_update(
+    update: &mut Update,
     rules: &Ruleset,
-) -> Update {
-    let mut numbers = update.into_iter().collect::<HashSet<_>>();
-    let mut update = Vec::new();
-    update
+) {
+    update.sort_by(|lhs, rhs| {
+        if rules.get(lhs).unwrap_or(&vec![]).contains(rhs) {
+            return Ordering::Less;
+        } else if rules.get(rhs).unwrap_or(&vec![]).contains(lhs) {
+            return Ordering::Greater;
+        }
+        Ordering::Equal
+    })
 }
 
 #[cfg(test)]
 mod tests {
     use crate::day_05::part_1;
     use crate::day_05::part_2;
-
-    #[test]
-    fn test_part_1_sample_input() {
-        let input = // Wrap to newline
-"47|53
+    const SAMPLE_INPUT: &str = // Wrap to newline
+        "47|53
 97|13
 97|61
 97|47
@@ -126,6 +129,10 @@ mod tests {
 75,97,47,61,53
 61,13,29
 97,13,75,29,47";
+
+    #[test]
+    fn test_part_1_sample_input() {
+        let input = SAMPLE_INPUT;
         assert_eq!(143, part_1(input));
     }
     #[test]
@@ -135,12 +142,11 @@ mod tests {
     }
     #[test]
     fn test_part_2_sample_input() {
-        let input = "";
-        assert_eq!(143, part_2(input));
+        assert_eq!(123, part_2(SAMPLE_INPUT));
     }
     #[test]
     fn test_part_2() {
         let input = std::fs::read_to_string("inputs/05.txt").unwrap();
-        assert_eq!(143, part_2(&input));
+        assert_eq!(7380, part_2(&input));
     }
 }
