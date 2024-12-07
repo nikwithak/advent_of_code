@@ -2,13 +2,15 @@ use std::{collections::HashSet, fmt::Display, fs::read_to_string, str::FromStr};
 
 use crate::util::Direction;
 
+// I tried to be clever on this one and build a re-usable maze mapper,
+// but it just made everything more complicated when I hit part 2.
 pub fn run_day_6() {
     let input = std::fs::read_to_string("inputs/04.txt").unwrap();
     println!("Day 6 Part 1: {}", part_1(&input));
     println!("Day 6 Part 2: {}", part_2(&input));
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Cursor2D {
     x: isize,
     y: isize,
@@ -16,7 +18,7 @@ pub struct Cursor2D {
     bounds: Option<Bounds>,
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Bounds {
     top_left_x: isize,
     top_left_y: isize,
@@ -83,6 +85,7 @@ impl Cursor2D {
     }
 }
 
+#[derive(Clone)]
 struct Maze2D {
     maze_map: Vec<Vec<Location>>,
     cursor: Cursor2D,
@@ -162,26 +165,63 @@ impl Maze2D {
         Ok(Self::from_str(&read_to_string(filename)?).unwrap())
     }
 
+    pub fn is_loop(&mut self) -> bool {
+        while self
+            .get_current_location()
+            .filter(|loc| !loc.is_already_visited_facing_dir(&self.cursor.direction))
+            .is_some()
+        {
+            let dir = self.cursor.direction.clone();
+            let loc = self.get_current_location_mut().unwrap();
+            loc.visit_facing_dir(&dir);
+            let (next_x, next_y) = self.cursor.look_forward();
+            if self.get(next_x, next_y).map(|l| l.is_obstacle).unwrap_or(false) {
+                self.cursor.turn_right();
+            } else {
+                self.cursor.move_forward();
+            }
+        }
+
+        self.get_current_location()
+            .map_or(false, |loc| loc.is_already_visited_facing_dir(&self.cursor.direction))
+    }
+
+    pub fn count_obstacle_locations(&mut self) -> i32 {
+        let mut count = 0;
+        while self
+            .get_current_location()
+            .filter(|loc| !loc.is_already_visited_facing_dir(&self.cursor.direction))
+            .is_some()
+        {
+            let mut new_maze = self.clone();
+            let (next_x, next_y) = new_maze.cursor.look_forward();
+            if let Some(next_loc) = new_maze
+                .get_mut(next_x, next_y)
+                .filter(|l| !l.is_obstacle && l.already_visited.is_empty())
+            {
+                next_loc.is_obstacle = true;
+                if new_maze.is_loop() {
+                    count += 1;
+                }
+            }
+
+            let dir = self.cursor.direction.clone();
+
+            println!("{self}");
+            let loc = self.get_current_location_mut().unwrap();
+            loc.visit_facing_dir(&dir);
+            let (next_x, next_y) = self.cursor.look_forward();
+            if self.get(next_x, next_y).map(|l| l.is_obstacle).unwrap_or(false) {
+                self.cursor.turn_right();
+            } else {
+                self.cursor.move_forward();
+            }
+        }
+        count
+    }
+
     pub fn trace_path(&mut self) -> usize {
         let mut count = 0;
-
-        // while let Some((x, y)) = self.cursor.look_forward() {
-        //     let dir = self.cursor.direction.clone();
-        //     self.get_current_location_mut().map(|l| l.visit_facing_dir(&dir));
-        //     if let Some(loc) =
-        //         self.get_mut(x, y).filter(|l| !l.is_already_visited_facing_dir(&dir)).as_mut()
-        //     {
-        //         if loc.is_obstacle {
-        //             self.cursor.turn_right();
-        //         }
-        //         if self.cursor.move_forward() {
-        //             count += 1;
-        //         }
-        //     } else {
-        //         break;
-        //     }
-        //     println!("{self}");
-        // }
         while self
             .get_current_location()
             .filter(|loc| !loc.is_already_visited_facing_dir(&self.cursor.direction))
@@ -199,7 +239,6 @@ impl Maze2D {
             } else {
                 self.cursor.move_forward();
             }
-            // println!("{self}");
         }
         count
     }
@@ -226,6 +265,7 @@ impl Maze2D {
     }
 }
 
+#[derive(Clone)]
 struct Location {
     is_obstacle: bool,
     already_visited: HashSet<Direction>,
@@ -251,7 +291,8 @@ fn part_1(input: &str) -> i32 {
     maze.trace_path() as i32
 }
 fn part_2(input: &str) -> i32 {
-    todo!()
+    let mut maze = Maze2D::from_str(input).unwrap();
+    maze.count_obstacle_locations()
 }
 
 #[cfg(test)]
@@ -280,7 +321,12 @@ mod tests {
         assert_eq!(4656, part_1(&input));
     }
     #[test]
-    fn test_part_2_sample_input() {}
+    fn test_part_2_sample_input() {
+        assert_eq!(6, part_2(SAMPLE_INPUT));
+    }
     #[test]
-    fn test_part_2() {}
+    fn test_part_2() {
+        let input = std::fs::read_to_string("inputs/06.txt").unwrap();
+        assert_eq!(0, part_2(&input));
+    }
 }
