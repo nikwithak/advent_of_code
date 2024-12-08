@@ -12,7 +12,6 @@ fn parse_line(line: &str) -> (u64, Vec<u64>) {
         .map(str::split_whitespace)
         .unwrap()
         .map(str::parse)
-        // .map(Result::unwrap)
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
     (test_value as u64, operands)

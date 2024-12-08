@@ -13,6 +13,9 @@ fn part_2(input: &str) -> i32 {
 
 #[cfg(test)]
 mod tests {
+    use crate::day_NN::{part_1, part_2};
+    use std::fs::read_to_string;
+
     const SAMPLE_INPUT: &str = // Wrap
         "";
     #[test]
@@ -26,11 +29,11 @@ mod tests {
     }
     #[test]
     fn test_part_2_sample_input() {
-        assert_eq!(0, part_1(SAMPLE_INPUT));
+        assert_eq!(0, part_2(SAMPLE_INPUT));
     }
     #[test]
     fn test_part_2() {
         let input = read_to_string("inputs/NN.txt").unwrap();
-        assert_eq!(0, part_1(&input));
+        assert_eq!(0, part_2(&input));
     }
 }
