@@ -161,6 +161,7 @@ impl FromStr for Maze2D {
 }
 
 impl Maze2D {
+    #[allow(unused)]
     pub fn load_file(filename: &str) -> Result<Self, std::io::Error> {
         Ok(Self::from_str(&read_to_string(filename)?).unwrap())
     }

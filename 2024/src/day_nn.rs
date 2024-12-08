@@ -1,7 +1,7 @@
-pub fn run_day_4() {
-    let input = std::fs::read_to_string("input/04.txt").unwrap();
-    println!("Day 4 Part 1: {}", part_1(&input));
-    println!("Day 4 Part 2: {}", part_2(&input));
+pub fn run_day_NN() {
+    let input = std::fs::read_to_string("inputs/NN.txt").unwrap();
+    println!("Day NN Part 1: {}", part_1(&input));
+    println!("Day NN Part 2: {}", part_2(&input));
 }
 
 fn part_1(input: &str) -> i32 {
@@ -13,12 +13,24 @@ fn part_2(input: &str) -> i32 {
 
 #[cfg(test)]
 mod tests {
+    const SAMPLE_INPUT: &str = // Wrap
+        "";
     #[test]
-    fn test_part_1_sample_input() {}
+    fn test_part_1_sample_input() {
+        assert_eq!(0, part_1(SAMPLE_INPUT));
+    }
     #[test]
-    fn test_part_1() {}
+    fn test_part_1() {
+        let input = read_to_string("inputs/NN.txt").unwrap();
+        assert_eq!(0, part_1(&input));
+    }
     #[test]
-    fn test_part_2_sample_input() {}
+    fn test_part_2_sample_input() {
+        assert_eq!(0, part_1(SAMPLE_INPUT));
+    }
     #[test]
-    fn test_part_2() {}
+    fn test_part_2() {
+        let input = read_to_string("inputs/NN.txt").unwrap();
+        assert_eq!(0, part_1(&input));
+    }
 }
